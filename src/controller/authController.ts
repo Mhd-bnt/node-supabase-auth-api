@@ -36,7 +36,7 @@ export const register = async (
     if (password.length < 7)
       return res
         .status(400)
-        .json({ error: "Password needs to be at leats 7 words long" });
+        .json({ error: "Password must be at least 6 characters" });
 
     // User exists :
 
@@ -62,6 +62,7 @@ export const register = async (
         id: true,
         email: true,
         name: true,
+        createdAt: true,
       },
     });
 

@@ -15,10 +15,13 @@ app.use(express.json());
 // IMPORTING ROUTES :
 import userRoutes from "./routes/userRoutes";
 import postRoutes from "./routes/postRoutes";
+import authRoutes from "./routes/authRoutes";
+
 // MOUNTING ROUTES :
 app.use("/api", userRoutes);
 app.use("/api", postRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/auth", authRoutes);
 
 // RUNNING SERVER :
 

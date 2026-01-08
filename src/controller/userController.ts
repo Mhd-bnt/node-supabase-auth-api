@@ -1,42 +1,42 @@
 import prisma from "../config/supabase";
 import { Request, Response } from "express";
 
-export const createUser = async (req: Request, res: Response) => {
-  try {
-    const { name, email } = req.body;
+// export const createUser = async (req: Request, res: Response) => {
+//   try {
+//     const { name, email } = req.body;
 
-    // Validation name :
-    if (!name || name.length > 50) {
-      return res.status(400).json({
-        error: "Inavlid input format",
-      });
-    }
+//     // Validation name :
+//     if (!name || name.length > 50) {
+//       return res.status(400).json({
+//         error: "Inavlid input format",
+//       });
+//     }
 
-    // Validation email:
-    if (!email || email.length > 100) {
-      return res.status(400).json({
-        error: "Invalide email format",
-      });
-    }
+//     // Validation email:
+//     if (!email || email.length > 100) {
+//       return res.status(400).json({
+//         error: "Invalide email format",
+//       });
+//     }
 
-    const user = await prisma.user.create({
-      data: { name, email },
-    });
+//     const user = await prisma.user.create({
+//       data: { name, email },
+//     });
 
-    res.status(201).json({
-      message: "User successfully created !",
-      user,
-    });
-  } catch (error: any) {
-    console.error(`[CREATE_USER] Error: `, {
-      error: error.message,
-      code: error.code,
-    });
-    res.status(500).json({
-      error: "Internal server error",
-    });
-  }
-};
+//     res.status(201).json({
+//       message: "User successfully created !",
+//       user,
+//     });
+//   } catch (error: any) {
+//     console.error(`[CREATE_USER] Error: `, {
+//       error: error.message,
+//       code: error.code,
+//     });
+//     res.status(500).json({
+//       error: "Internal server error",
+//     });
+//   }
+// };
 
 // GET ALL USER :
 
