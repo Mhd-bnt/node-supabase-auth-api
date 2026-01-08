@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Book {
+  id              Int      @id @default(autoincrement())
+  title           String
+  author          String
+  description     String?
+  recommandedById Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime
+  User            User     @relation(fields: [recommandedById], references: [id])
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+  Post        Post[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  postId    Int
+  authorId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  User      User     @relation(fields: [authorId], references: [id])
+  Post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  userId    Int
+  postId    Int
+  Post      Post     @relation(fields: [postId], references: [id])
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Image {
+  id        Int      @id @default(autoincrement())
+  url       String
+  alt       String
+  width     Int
+  height    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime?
+  postId    Int      @unique
+  Post      Post     @relation(fields: [postId], references: [id])
+}
+
+model Post {
+  id         Int        @id @default(autoincrement())
+  title      String
+  content    String?
+  published  Boolean    @default(false)
+  authorId   Int?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime @updatedAt
+  categoryId Int?
+  Comment    Comment[]
+  Favorite   Favorite[]
+  Image      Image?
+  User       User?      @relation(fields: [authorId], references: [id])
+  Category   Category?  @relation(fields: [categoryId], references: [id])
+  Schedule   Schedule?
+  View       View[]
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  bio       String
+  avatar    String?
+  location  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  userId    Int      @unique
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Schedule {
+  id          Int      @id @default(autoincrement())
+  publishAT   DateTime
+  isPublished Boolean
+  createdAt   DateTime @default(now())
+  postId      Int      @unique
+  Post        Post     @relation(fields: [postId], references: [id])
+}
+
+model User {
+  id        Int        @id @default(autoincrement())
+  email     String     @unique
+  name      String?
+  password String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime @updatedAt
+  Book      Book[]
+  Comment   Comment[]
+  Favorite  Favorite[]
+  Post      Post[]
+  Profile   Profile?
+  View      View[]
+}
+
+model View {
+  id        Int      @id @default(autoincrement())
+  viewedAt  DateTime @default(now())
+  ipAddress String
+  postId    Int
+  userId    Int?
+  Post      Post     @relation(fields: [postId], references: [id])
+  User      User?    @relation(fields: [userId], references: [id])
+}
+
+
