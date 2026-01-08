@@ -1,52 +1,48 @@
-// middleware/auth.ts
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-export const authenticateToken = (
+export const authenticateToken = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
   try {
-    // 1. Récupérer header
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
+    // Validation authHdeaer :
+
+    if (!authHeader)
       return res.status(401).json({
-        error: "Access denied. No token provided",
+        error: "No token was provided",
       });
-    }
 
-    // 2. Extraire token
-    const token = authHeader.split(" ")[1];
+    // Recvor token from headers :
 
-    if (!token) {
-      return res.status(401).json({
-        error: "Access denied. Invalid token format",
-      });
-    }
+    const token = authHeader.split("")[1];
 
-    // 3. Vérifier token
+    // Validation token :
+
     const payload = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
-      userId: number;
+      id: number;
       email: string;
     };
 
-    // 4. Ajouter user à req
+    // Add user to Request body :
+
     req.user = {
-      id: payload.userId,
+      id: payload.id,
       email: payload.email,
     };
 
-    // 5. Continuer
     next();
   } catch (error: any) {
-    console.error("[AUTHENTICATE_TOKEN] Error:", {
+    console.error("[auth_MIDDLEWARE]  Error: ", {
       error: error.message,
       code: error.code,
     });
-    return res.status(403).json({
-      error: "Invalid or expired token",
+
+    res.status(500).json({
+      error: "Inernals server error",
     });
   }
 };
