@@ -1,11 +1,11 @@
 import { Router } from "express";
 import * as postController from "../controller/postController";
+import { authenticateToken } from "../middleware/auth";
+
 const router = Router();
 
-router.post("/post", postController.createPost);
-router.get("/", postController.getAllPosts);
-router.get("/:postId", postController.getPost);
-router.patch("/:postId", postController.updatePost);
+// Route protégée
+router.post("/", authenticateToken, postController.createPost);
 
 export default router;
 

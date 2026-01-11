@@ -1,7 +1,5 @@
-// IMPORTS :
-
-import prisma from "../config/supabase";
 import { Request, Response } from "express";
+import prisma from "../config/supabase";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
@@ -16,56 +14,56 @@ export const register = async (
   res: Response
 ) => {
   try {
-    const { password, name, email } = req.body;
+    const { name, email, password } = req.body;
 
     // Validation name :
-    if (!name || typeof name !== "string")
+    if (typeof name !== "string")
       return res.status(400).json({
-        error: "Name is required",
+        error: "Name need to be a string",
       });
-    // Validation email :
+
+    // Validation password :
+
+    if (!password || typeof password !== "string")
+      return res.status(400).json({
+        error: "Password is required",
+      });
+
+    if (password.length < 6)
+      return res.status(400).json({
+        error: "Password must be at least 6 characters ",
+      });
+    // Validation email:
+
     if (!email || typeof email !== "string")
       return res.status(400).json({
         error: "Email is required",
       });
-    // Validation password :
-
-    if (!password || typeof password !== "string")
-      return res.status(400).json({ error: "Email is required" });
-
-    if (password.length < 6)
-      return res.status(400).json({
-        error: "Paaword must be at least 6 characters",
-      });
-
-    // Verify email not used :
 
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser)
-      return res.status(409).json({
-        error: "Email already used",
-      });
+      return res.status(409).json({ error: "Email is already used" });
 
-    // Hashing password:
+    // Hashing password :
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user in db :
+    // Creating new user :
 
     const user = await prisma.user.create({
       data: {
-        email,
         name,
+        email,
         password: hashedPassword,
       },
       select: {
         id: true,
-        updatedAt: true,
-        email: true,
         name: true,
+        email: true,
+        createdAt: true,
       },
     });
 
@@ -74,74 +72,77 @@ export const register = async (
       user,
     });
   } catch (error: any) {
-    console.error("[REGISTER] Error: ", {
+    console.error("[REGISTER] Error:", {
       error: error.message,
       code: error.code,
     });
 
     res.status(500).json({
-      error: "Internal server error ",
+      error: "Internal server error",
     });
   }
 };
 
-// Login:
+// LOGIN :
 
 interface LoginBody {
-  name?: string;
-  email: string;
   password: string;
+  email: string;
 }
 
 export const login = async (req: Request<{}, {}, LoginBody>, res: Response) => {
   try {
-    const { email, password } = req.body;
+    const { password, email } = req.body;
 
-    // Validation password & email :
+    // Validation Email and Password :
 
-    if (!email || !password)
-      return res.status(400).json({
-        error: "Email and password are required",
-      });
+    if (!password || !email)
+      return res.status(400).json({ error: "Email and password are required" });
 
-    // Validation user :
+    // Validation email exists :
 
     const user = await prisma.user.findUnique({
       where: { email },
     });
 
-    if (!user) return res.status(401).json({ error: "Invalide credentials" });
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
     // Validation password :
+
     const isValidPassword = await bcrypt.compare(password, user.password);
 
     if (!isValidPassword)
-      return res.status(401).json({
-        error: "Invalid credentials",
-      });
+      return res.status(401).json({ error: "Invalid credentials" });
 
-    // Creating Token :
+    // Creating token :
 
     const token = jwt.sign(
-      { userId: user.id, name: user.name, email: user.name },
+      { userId: user.id, name: user.name, email: user.email },
       process.env.JWT_SECRET || "secret",
-      { expiresIn: "1h" }
+      {
+        expiresIn: "1h",
+      }
     );
 
+    // Return token with user :
+
     res.status(200).json({
-      message: "Successfully logged in",
+      message: `Hello ${user.name} you are successfully logged in !`,
       token,
-      user: {
+      data: {
         id: user.id,
-        name: user.name || "Unknown",
+        name: user.name,
         email: user.email,
-        createdAt: user.createdAt,
+        createdAT: user.createdAt,
       },
     });
   } catch (error: any) {
     console.error("[LOGIN] Error:", {
       error: error.message,
       code: error.code,
+    });
+    res.status(500).json({
+      error: "Internal server error",
     });
   }
 };
