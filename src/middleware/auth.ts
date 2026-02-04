@@ -1,45 +1,59 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
+import { RequestHandler } from "express";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 
-export const authenticateToken = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  throw new Error("[AUTH] JWT_SECRET is missing from variable environement");
+}
+
+export const auth: RequestHandler = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({
+      error: "Unauthorized",
+      message: "Token is missing",
+    });
+  }
+
+  const token = authHeader.slice(7);
+
   try {
-    const authHeader = req.headers.authorization;
+    const decoded = jwt.verify(token, JWT_SECRET);
 
-    if (!authHeader) {
+    if (!decoded || typeof decoded !== "object") {
       return res.status(401).json({
-        error: "Access denied. No token provided",
+        error: "Unauthorized",
+        message: "Invalid payload",
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const payload = decoded as JwtPayload;
+    const { userId, email } = payload;
 
-    if (!token) {
+    if (typeof userId !== "number" || typeof email !== "string") {
       return res.status(401).json({
-        error: "Access denied. Invalid token format",
+        error: "Unauthorized",
+        message: "Payload is missing",
       });
     }
 
-    // Vérifier token
-    const payload = jwt.verify(token, process.env.JWT_SECRET || "secret") as {
-      userId: number;
-      email: string;
-    };
-
-    // Ajouter user à req
-    req.user = {
-      id: payload.userId,
-      email: payload.email,
-    };
-
+    req.user = { id: userId, email };
     next();
-  } catch (error: any) {
-    console.error("[AUTH_MIDDLEWARE] Error:", error);
-    return res.status(403).json({
-      error: "Invalid or expired token",
+  } catch (error: unknown) {
+    const jwtError = error as { name?: string };
+
+    if (jwtError?.name === "TokenExpiredError") {
+      return res.status(401).json({
+        error: "Unauthorized",
+        message: "Token expired",
+      });
+    }
+
+    return res.status(401).json({
+      error: "Unauthorized",
+      message: "Invalid Token",
     });
   }
 };
