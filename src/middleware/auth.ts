@@ -1,11 +1,9 @@
 import { RequestHandler } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
+import { config } from "../config/env";
+import { logger } from "../utils/logger";
 
-const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!JWT_SECRET) {
-  throw new Error("[AUTH] JWT_SECRET is missing from variable environement");
-}
+const JWT_SECRET = config.jwt.secret;
 
 export const auth: RequestHandler = (req, res, next) => {
   const authHeader = req.headers.authorization;
